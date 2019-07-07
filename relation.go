@@ -1,6 +1,7 @@
 package goramda
 
 import (
+	// "fmt"
 	"reflect"
 )
 
@@ -20,37 +21,23 @@ func Equals(a, b interface{}) bool {
 	return reflect.DeepEqual(a, b)
 }
 
-// func Equals(a ...interface{}) func() interface{} {
-// 	if len(a) == 1 {
-// 		return func() interface{} {
-// 			return Head(a)
-// 		}
-// 	}
-//
-// 	return func() interface{} {
-// 		head := Head(a)
-// 		for i := 1; i < len(a); i++ {
-// 			if a[i] != head {
-// 				return false
-// 			}
-// 		}
-// 		return true
-// 	}
-// }
+/*
 
-// // HasElem checks if a given slice of elements contains the provided single element value.
-// // if element available return true
-// func Gt(a, b interface{}) bool {
-// 	aV := reflect.ValueOf(a)
-// 	bV := reflect.ValueOf(b)
-// 	if aV.Kind() == bV.Kind() {
-// 		for i := 0; i < arrV.Len(); i++ {
-// 			// XXX - panics if slice element points to an unexported struct field
-// 			// see https://golang.org/pkg/reflect/#Value.Interface
-// 			if aV > bV {
-// 				return true
-// 			}
-// 		}
-// 	}
-// 	return false
-// }
+// HasElem checks if a given slice of elements contains the provided single element value.
+// if element available return true
+func Gt(a, b interface{}) (bool, error) {
+	aV := reflect.ValueOf(a)
+	bV := reflect.ValueOf(b)
+	if aV.Kind() != bV.Kind() {
+		return false, fmt.Errorf("Type mismatch (%T,  %T)", a, b)
+	}
+	switch v := ttest.(type) {
+	case int:
+		fmt.Println(v > ee.(int))
+	default:
+		fmt.Println(ee)
+
+	}
+	return false, fmt.Errorf("invalid operation: aV > bV (operator > not defined on %T)", a)
+}
+*/

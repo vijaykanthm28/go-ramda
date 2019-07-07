@@ -29,6 +29,23 @@ var (
 	defaultInterface  interface{}
 )
 
+var comparableKind = []reflect.Kind{
+	reflect.String,
+	reflect.Int,
+	reflect.Int8,
+	reflect.Int16,
+	reflect.Int32,
+	reflect.Int64,
+	reflect.Uint,
+	reflect.Uint8,
+	reflect.Uint16,
+	reflect.Uint32,
+	reflect.Uint64,
+	reflect.Float32,
+	reflect.Float64,
+	reflect.Uintptr,
+}
+
 var (
 	defaultKindValues = map[reflect.Kind]interface{}{
 		reflect.String:     defaultString,

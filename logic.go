@@ -9,7 +9,7 @@ import (
 And
 Or
 Not
-pathSatisfies // have to do minnor change (first or is func )
+pathSatisfies
 propSatisfies
 IfElse
 hasPath
@@ -76,31 +76,6 @@ func DeepFields(index int, path []string, iface interface{}, result interface{})
 	return
 }
 
-// Pointer elements fields find
-// t := reflect.TypeOf(item)
-// for i := 0; i < t.NumField(); i++ {
-//     ft := t.Field(i).Type
-//     if ft.Kind() == reflect.Ptr {
-//         ft = ft.Elem()
-//     }
-//     fmt.Println(ft.Kind())
-// }
-
-// c := C{"foo", "bar", "baz"}
-
-// s := reflect.ValueOf(dd).Elem()
-// typeOfT := s.Type()
-//
-// for i := 0; i < s.NumField(); i++ {
-// 	f := s.Field(i)
-// 	fmt.Printf("%d: %s %s %s = %v\n", i,
-// 		typeOfT.Field(i).Name, f.Type(), f.Kind(), f.Interface())
-// 	if f.Kind() == reflect.Struct {
-// 		s1 := reflect.ValueOf(f.Interface()).Elem()
-// 		fmt.Println("Sub struct Fields", s1.NumField())
-// 	}
-// }
-
 func PathOr(defaultResult interface{}, path []string, data interface{}) interface{} {
 	var result interface{}
 	f := DeepFields(0, path, data, &result)
@@ -110,21 +85,66 @@ func PathOr(defaultResult interface{}, path []string, data interface{}) interfac
 	return defaultResult
 }
 
+type DeciderFun func(interface{}) bool
+
+func PathEq(path []string, elm interface{}) DeciderFun {
+	return func(data interface{}) bool {
+		eq := func(d interface{}) bool { return Equals(d, elm) }
+		return PathSatisfies(eq, path, data)
+	}
+}
+
 func HasPath(path []string, dd interface{}) bool {
 	f := DeepFields(0, path, dd, nil)
 	return Equals(path, f)
 }
 
-// TODO: have to change as function check
-func PathSatisfies(path string, d interface{}) bool {
-	return HasPath([]string{path}, d)
+func Path(path []string, data interface{}) interface{} {
+	var result interface{}
+	f := DeepFields(0, path, data, &result)
+	if Equals(path, f) {
+		return result
+	}
+	return nil
 }
 
-// TODO: have to change as function check
-func PropSatisfies(path string, d interface{}) bool {
-	return HasPath([]string{path}, d)
-}
-
-func IsEmpty(d interface{}) bool {
+func PathSatisfies(fn DeciderFun, path []string, data interface{}) bool {
+	var result interface{}
+	f := DeepFields(0, path, data, &result)
+	if Equals(path, f) {
+		return fn(result)
+	}
 	return false
+}
+
+func PropSatisfies(fn func(d interface{}) bool, path string, d interface{}) bool {
+	return PathSatisfies(fn, []string{path}, d)
+}
+
+func getDefaultValueOf(d interface{}) interface{} {
+	ifv := reflect.ValueOf(d)
+	var defaultValue interface{}
+	switch ifv.Kind() {
+	case reflect.Ptr:
+		elmType := reflect.TypeOf(d).Elem()
+		elmPtr2 := reflect.New(elmType)
+		defaultValue = elmPtr2.Interface()
+	default:
+		ptrOfElm := reflect.New(reflect.TypeOf(d))
+		defaultValue = ptrOfElm.Elem().Interface()
+	}
+	return defaultValue
+}
+
+func IsNil(d interface{}) bool {
+	return d == nil
+}
+
+// IsEmpty will return true if it has its default value
+func IsEmpty(d interface{}) bool {
+	if IsNil(d) {
+		return true
+	}
+	defaultValue := getDefaultValueOf(d)
+	return Equals(d, defaultValue)
 }
