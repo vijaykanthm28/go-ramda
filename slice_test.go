@@ -23,18 +23,39 @@ func TestHead(t *testing.T) {
 }
 
 func TestTail(t *testing.T) {
-	data := map[string]interface{}{
-		"Sting Slice":   []string{"A", "V", "C"},
-		"Integer Slice": []int{5, 50, 500},
-		"Float Slice":   []float64{0.11, 0.22, 0.33},
-		"Empty Slice":   []int{},
-		"String":        "00000",
-		"Empty String":  "",
+	data := map[string]struct {
+		data        interface{}
+		expectedVal interface{}
+	}{
+		"Sting Slice": {
+			data:        []string{"A", "V", "C"},
+			expectedVal: "C",
+		},
+		"Int Slice": {
+			data:        []int{5, 50, 500, 5000},
+			expectedVal: 5000,
+		},
+		"Float Slice": {
+			data:        []float64{0.11, 0.22, 0.23, 0.24, 0.33},
+			expectedVal: 0.33,
+		},
+		"Empty Slice": {
+			data:        []int{},
+			expectedVal: nil,
+		},
+		"Sting": {
+			data:        "2547893",
+			expectedVal: uint8('3'),
+		},
+		"EmptySting": {
+			data:        "",
+			expectedVal: nil,
+		},
 	}
 
 	for key, v := range data {
-		out := Tail(v)
-		if out == nil {
+		out := Tail(v.data)
+		if out != v.expectedVal {
 			t.Fatalf("\n Unexpected error %s Tail value :[%v] and type: %T", key, out, out)
 		}
 	}
@@ -82,7 +103,7 @@ func TestDrop(t *testing.T) {
 	}
 }
 
-func TestIndexOf(t *testing.T) {
+func TestNth(t *testing.T) {
 	data := map[string]interface{}{
 		"Sting Slice":   []string{"A", "V", "C"},
 		"Integer Slice": []int{5, 50, 500},
@@ -91,7 +112,47 @@ func TestIndexOf(t *testing.T) {
 
 	for key, v := range data {
 		index := rand.Intn(len(data))
-		out := IndexOf(index, v)
+		out := Nth(index, v)
 		fmt.Printf("\n %s IndexOf[%d] value :[%v] and type: %T", key, index, out, out)
+	}
+}
+
+func TestFind(t *testing.T) {
+	data := map[string]interface{}{
+		"Sting Slice":   []string{"V", "I", "J", "A", "Y", "A", "K", "N", "T", "H"},
+		"Integer Slice": []int{5, 50, 500, 2, 3, 5, 85, 96},
+		"Float Slice":   []float64{0.11, 0.22, 0.33, 0.32, 2.2, 3.3, 5.5},
+	}
+	for key, v := range data {
+		arrV := reflect.ValueOf(v)
+		index := rand.Intn(arrV.Len() - 1)
+		v1 := arrV.Index(index).Interface()
+		findFunc := Find(func(d interface{}) bool {
+			return Equals(d, v1)
+		})
+		out := findFunc(v)
+		if v1 != out {
+			t.Fatalf("Find value of (%v) unexpected result expected value [%v] got: %v", key, v1, out)
+		}
+	}
+}
+
+func TestFindIndex(t *testing.T) {
+	data := map[string]interface{}{
+		"Sting Slice":   []string{"V", "I", "J", "A", "Y", "A", "K", "N", "T", "H"},
+		"Integer Slice": []int{5, 50, 500, 2, 3, 51, 85, 96},
+		"Float Slice":   []float64{0.11, 0.22, 0.33, 0.32, 2.2, 3.3, 5.5},
+	}
+	for key, v := range data {
+		arrV := reflect.ValueOf(v)
+		index := rand.Intn(arrV.Len() - 1)
+		v1 := arrV.Index(index).Interface()
+		findFunc := FindIndex(func(d interface{}) bool {
+			return Equals(d, v1)
+		})
+		out := findFunc(v)
+		if out != index {
+			t.Fatalf("findIndex of (%v) unexpected result expected index [%v] got: %v", key, index, out)
+		}
 	}
 }
