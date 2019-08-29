@@ -185,14 +185,14 @@ func DropLast(count int, d interface{}) interface{} {
 	return drop(0, v.Len()-(1+count), d)
 }
 
-func append(arrV interface{}, s ...interface{}) interface{} {
+func Append(arrV interface{}, s ...interface{}) interface{} {
 	n := reflect.ValueOf(arrV)
 	n2 := reflect.ValueOf(s)
 	newV := reflect.MakeSlice(reflect.TypeOf(s), 0, 0)
 	for i := 0; i < n.Len(); i++ {
 		newV = reflect.Append(newV, n.Index(i))
 	}
-	for i := 0; i < add.Len(); i++ {
+	for i := 0; i < n2.Len(); i++ {
 		newV = reflect.Append(newV, n2.Index(i))
 	}
 	return newV.Interface()
