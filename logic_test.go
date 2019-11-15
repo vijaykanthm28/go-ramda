@@ -141,3 +141,10 @@ func TestPropsSatisfies(t *testing.T) {
 		t.Fatal("Unexpected result ")
 	}
 }
+
+func TestGetDefaultData(t *testing.T) {
+	s := &Sub{}
+	v := getDefaultValueOf(s)
+	fmt.Println(s, "<=======>", v)
+	t.Fatal("failed ")
+}
