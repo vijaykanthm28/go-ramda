@@ -123,6 +123,9 @@ func PropSatisfies(fn func(d interface{}) bool, path string, d interface{}) bool
 }
 
 func getDefaultValueOf(d interface{}) interface{} {
+	if IsNil(d) {
+		return nil
+	}
 	ifv := reflect.ValueOf(d)
 	var defaultValue interface{}
 	switch ifv.Kind() {

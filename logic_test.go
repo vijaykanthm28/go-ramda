@@ -142,9 +142,17 @@ func TestPropsSatisfies(t *testing.T) {
 	}
 }
 
-func TestGetDefaultData(t *testing.T) {
-	s := &Sub{}
+func TestGetDefaultNewData(t *testing.T) {
+	s := &Sub{
+		Sa: "Welcome",
+	}
 	v := getDefaultValueOf(s)
-	fmt.Println(s, "<=======>", v)
-	t.Fatal("failed ")
+	d, ok := v.(*Sub)
+	if !ok {
+		t.Fatalf("Unexpected type (%T) expected type (%T)", d, s)
+	}
+
+	if d.Sa == s.Sa {
+		t.Fatalf("Unexpected object expected empty object got (%v)", d)
+	}
 }
