@@ -184,8 +184,22 @@ func TestFirstLevelFieldOnPathOr(t *testing.T) {
 	}
 }
 
-
 func TestPathOrSlice(t *testing.T) {
+	path := []string{"1"}
+	data := []string{
+		"Keyboard",
+		"Mouse",
+		"Touch Pen",
+		"Monitor",
+	}
+	expected := data[1]
+	result := PathOr("", path, data).(string)
+	if NotEquals(expected, result) {
+		t.Fatalf(fmt.Sprintf("Unexpected result pathOr expected (%T/%v) got (%T/%v) ", expected, expected, result, result))
+	}
+}
+
+func TestPathOrStructSlice(t *testing.T) {
 	path := []string{"Sub", "SuperSub", "SliceSet"}
 	expected := tt.Sub.SuperSub.SliceSet
 	result := PathOr([]DataSet{}, path, &tt).([]DataSet)

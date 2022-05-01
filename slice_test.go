@@ -80,7 +80,7 @@ func TestLast(t *testing.T) {
 		},
 		"Empty Slice": {
 			data:        []int{},
-			expectedVal: []int{},
+			expectedVal: nil,
 		},
 		"Sting": {
 			data:        "2547893",
@@ -88,12 +88,12 @@ func TestLast(t *testing.T) {
 		},
 		"EmptySting": {
 			data:        "",
-			expectedVal: "",
+			expectedVal: nil,
 		},
 	}
 
 	for key, v := range data {
-		out := Tail(v.data)
+		out := Last(v.data)
 		if NotEquals(out, v.expectedVal) {
 			t.Fatalf("\n Unexpected error on (%s) Tail value :[%v] and type: %T", key, out, out)
 		}
