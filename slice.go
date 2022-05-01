@@ -96,6 +96,20 @@ func isSlice(d interface{}) bool {
 func Tail(d interface{}) interface{} {
 	arrV := reflect.ValueOf(d)
 	switch arrV.Kind() {
+	case reflect.Slice:
+		return drop(0, arrV.Len(), d)
+	case reflect.String:
+		return trimFirstRune(String(d))
+	case reflect.Ptr:
+		return nil
+	default:
+		return getDefaultValueOf(d)
+	}
+}
+
+func Last(d interface{}) interface{} {
+	arrV := reflect.ValueOf(d)
+	switch arrV.Kind() {
 	case reflect.String, reflect.Slice:
 		return nth(arrV.Len()-1, arrV)
 	case reflect.Ptr:
@@ -103,6 +117,17 @@ func Tail(d interface{}) interface{} {
 	default:
 		return getDefaultValueOf(d)
 	}
+}
+
+func trimFirstRune(s string) string {
+	for i := range s {
+		if i > 0 {
+			// The value i is the index in s of the second
+			// rune.  Slice to remove the first rune.
+			return s[i:]
+		}
+	}
+	return ""
 }
 
 func nth(index int, arrV reflect.Value) interface{} {
@@ -131,7 +156,9 @@ func Nth(index int, d interface{}) interface{} {
 	return nth(index, arrV)
 }
 
-func Contains(s, elem interface{}) bool {
+// Includes checks if a given slice of elements contains the provided single element value.
+// if element available return true
+func Includes(s, elem interface{}) bool {
 	return contains(s, elem) >= 0
 }
 
@@ -139,6 +166,8 @@ func contains(s, elem interface{}) int {
 	arrV := reflect.ValueOf(s)
 	if arrV.Kind() == reflect.Slice {
 		for i := 0; i < arrV.Len(); i++ {
+			// XXX - panics if slice element points to an unexported struct field
+			// see https://golang.org/pkg/reflect/#Value.Interface
 			if arrV.Index(i).Interface() == elem {
 				return i
 			}

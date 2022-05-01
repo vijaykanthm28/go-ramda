@@ -16,7 +16,6 @@ Union
 // cyclical data structures.
 /*
   R.equals(1, 1); //=> true
-  R.equals(1, '1'); //=> false
   R.equals([1, 2, 3], [1, 2, 3]); //=> true
 */
 

@@ -1,8 +1,21 @@
 package goramda
 
+import (
+	"fmt"
+)
+
 func String(v interface{}) string {
-	if value, ok := v.(string); ok {
-		return value
+	switch v.(type) {
+	case byte:
+		return string(v.(byte))
+	case []byte:
+		return string(v.([]byte))
+	case string:
+		return v.(string)
+	case int, int32, int64, float64:
+		return fmt.Sprintf("%v", v)
+	default:
+		return ""
 	}
 	return ""
 }

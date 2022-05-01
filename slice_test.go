@@ -29,6 +29,45 @@ func TestTail(t *testing.T) {
 	}{
 		"Sting Slice": {
 			data:        []string{"A", "V", "C"},
+			expectedVal: []string{"A", "V", "C"},
+		},
+		"Int Slice": {
+			data:        []int{5, 50, 500, 5000},
+			expectedVal: []int{5, 50, 500, 5000},
+		},
+		"Float Slice": {
+			data:        []float64{0.11, 0.22, 0.23, 0.24, 0.33},
+			expectedVal: []float64{0.11, 0.22, 0.23, 0.24, 0.33},
+		},
+		"Empty Slice": {
+			data:        []int{},
+			expectedVal: []int{},
+		},
+		"Sting": {
+			data:        "2547893",
+			expectedVal: "547893",
+		},
+		"EmptySting": {
+			data:        "",
+			expectedVal: "",
+		},
+	}
+
+	for key, v := range data {
+		out := Tail(v.data)
+		if NotEquals(out, v.expectedVal) {
+			t.Fatalf("\n Unexpected error %s Tail value :[%v] and type: %T", key, out, out)
+		}
+	}
+}
+
+func TestLast(t *testing.T) {
+	data := map[string]struct {
+		data        interface{}
+		expectedVal interface{}
+	}{
+		"Sting Slice": {
+			data:        []string{"A", "V", "C"},
 			expectedVal: "C",
 		},
 		"Int Slice": {
@@ -41,7 +80,7 @@ func TestTail(t *testing.T) {
 		},
 		"Empty Slice": {
 			data:        []int{},
-			expectedVal: nil,
+			expectedVal: []int{},
 		},
 		"Sting": {
 			data:        "2547893",
@@ -49,14 +88,14 @@ func TestTail(t *testing.T) {
 		},
 		"EmptySting": {
 			data:        "",
-			expectedVal: nil,
+			expectedVal: "",
 		},
 	}
 
 	for key, v := range data {
 		out := Tail(v.data)
-		if out != v.expectedVal {
-			t.Fatalf("\n Unexpected error %s Tail value :[%v] and type: %T", key, out, out)
+		if NotEquals(out, v.expectedVal) {
+			t.Fatalf("\n Unexpected error on (%s) Tail value :[%v] and type: %T", key, out, out)
 		}
 	}
 }

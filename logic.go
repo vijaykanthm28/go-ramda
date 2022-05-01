@@ -2,6 +2,7 @@ package goramda
 
 import (
 	"reflect"
+	"strconv"
 )
 
 // TODO: following have to implement
@@ -9,18 +10,30 @@ import (
 And
 Or
 Not
-pathSatisfies
-propSatisfies
 IfElse
-hasPath
-pathOr
-pathEq
+HasPath
+PathOr
+PathEq
+PathSatisfies
+PropSatisfies
 
 May implement
 
 until
 when
 */
+
+func And(expressions ...bool) bool {
+	return !Includes(expressions, false)
+}
+
+func Or(expressions ...bool) bool {
+	return !Includes(expressions, true)
+}
+
+func Not(expression bool) bool {
+	return !expression
+}
 
 func IfElse(cond bool, trueBlock interface{}, falseBlock interface{}) interface{} {
 	if cond == true {
@@ -29,12 +42,36 @@ func IfElse(cond bool, trueBlock interface{}, falseBlock interface{}) interface{
 	return falseBlock
 }
 
-func And(expressions ...bool) bool {
-	return !Contains(expressions, false)
+func Path(path []string, data interface{}) interface{} {
+	var result interface{}
+	if IsEmpty(data) {
+		return nil
+	}
+	f := DeepFields(0, path, data, &result)
+	if Equals(path, f) {
+		return result
+	}
+	return nil
 }
 
-func Or(expressions ...bool) bool {
-	return !Contains(expressions, true)
+func PathOr(defaultResult interface{}, path []string, data interface{}) interface{} {
+	var result interface{}
+	if IsEmpty(data) {
+		return defaultResult
+	}
+	f := DeepFields(0, path, data, &result)
+	if Equals(path, f) {
+		return result
+	}
+	return defaultResult
+}
+
+func IsInteger(s string) bool {
+	_, err := strconv.Atoi(s)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func DeepFields(index int, path []string, iface interface{}, result interface{}) (field []string) {
@@ -61,10 +98,68 @@ func DeepFields(index int, path []string, iface interface{}, result interface{})
 		if len(subField) > 0 {
 			field = append(field, subField...)
 		}
-	case reflect.Ptr:
-		subField := DeepFields(index, path, ifv.Elem().Interface(), result)
+	case reflect.Slice:
+		sindex, err := strconv.Atoi(path[index])
+		if err != nil {
+			return
+		}
+		if len(path) <= index+1 && sindex >= 0 {
+			if ifv.IsValid() {
+				field = append(field, path[index])
+			}
+			setResult()
+			val := reflect.ValueOf(result)
+			if result != nil {
+				val.Elem().Set(ifv.Index(sindex))
+			}
+			return
+		}
+
+		field = append(field, path[index])
+		subField := DeepFields(index+1, path, ifv.Index(sindex).Interface(), result)
 		if len(subField) > 0 {
 			field = append(field, subField...)
+		}
+	case reflect.Ptr:
+		subField := DeepFields(index, path,
+			ifv.Elem().Interface(),
+			result)
+		if len(subField) > 0 {
+			field = append(field, subField...)
+		}
+	case reflect.Map:
+		for _, e := range ifv.MapKeys() {
+			if Equals(e.Interface(), path[index]) {
+				mv := ifv.MapIndex(e)
+				switch mv.Kind() {
+				case reflect.Int, reflect.Int32, reflect.Int64, reflect.String, reflect.Float64:
+					val := reflect.ValueOf(result)
+					if result != nil {
+						val.Elem().Set(mv)
+						if mv.IsValid() {
+							field = append(field, path[index])
+						}
+					}
+				case reflect.Struct:
+					if !mv.IsValid() {
+						return
+					}
+					field = append(field, path[index])
+					subField := DeepFields(index+1, path, mv.Interface(), result)
+					if len(subField) > 0 {
+						field = append(field, subField...)
+					}
+				case reflect.Ptr:
+					field = append(field, path[index])
+					subField := DeepFields(index+1, path, mv.Interface(), result)
+					if len(subField) > 0 {
+						field = append(field, subField...)
+					}
+				default:
+					return
+				}
+			}
+
 		}
 	default:
 		v := ifv.FieldByName(path[index])
@@ -75,15 +170,6 @@ func DeepFields(index int, path []string, iface interface{}, result interface{})
 	}
 
 	return
-}
-
-func PathOr(defaultResult interface{}, path []string, data interface{}) interface{} {
-	var result interface{}
-	f := DeepFields(0, path, data, &result)
-	if Equals(path, f) {
-		return result
-	}
-	return defaultResult
 }
 
 type DeciderFun func(interface{}) bool
@@ -100,15 +186,6 @@ func HasPath(path []string, dd interface{}) bool {
 	return Equals(path, f)
 }
 
-func Path(path []string, data interface{}) interface{} {
-	var result interface{}
-	f := DeepFields(0, path, data, &result)
-	if Equals(path, f) {
-		return result
-	}
-	return nil
-}
-
 func PathSatisfies(fn DeciderFun, path []string, data interface{}) bool {
 	var result interface{}
 	f := DeepFields(0, path, data, &result)
@@ -118,7 +195,7 @@ func PathSatisfies(fn DeciderFun, path []string, data interface{}) bool {
 	return false
 }
 
-func PropSatisfies(fn func(d interface{}) bool, path string, d interface{}) bool {
+func PropSatisfies(fn DeciderFun, path string, d interface{}) bool {
 	return PathSatisfies(fn, []string{path}, d)
 }
 
@@ -141,7 +218,14 @@ func getDefaultValueOf(d interface{}) interface{} {
 }
 
 func IsNil(d interface{}) bool {
-	return d == nil
+	if d == nil {
+		return true
+	}
+	switch reflect.TypeOf(d).Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
+		return reflect.ValueOf(d).IsNil()
+	}
+	return false
 }
 
 // IsEmpty will return true if it has its default value
