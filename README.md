@@ -36,7 +36,8 @@ This package supports limited functions of ramda which are used ofter
 | Drop          | returns removes sets of elements upto given value index on given array                |
 | DropLast      | returns removes sets of elements upto given value index from the last on given array  |
 | Append        | appends given elements into give first array argument                                 |
-|---------------|---------------------------------------------------------------------------------------|
+
+
 
 *Following functions are type assertion functions which assert interface to go types*
 

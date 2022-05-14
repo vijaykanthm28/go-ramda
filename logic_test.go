@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-
 type MainStruct struct {
 	A   int
 	B   string
@@ -20,6 +19,7 @@ type Sub struct {
 }
 
 type SuperSub struct {
+	InlineStruct
 	AJ           float64
 	A            string
 	SliceSet     []DataSet
@@ -33,12 +33,19 @@ type DataSet struct {
 	Value string
 }
 
+type InlineStruct struct {
+	Value string
+}
+
 var tt = MainStruct{
 	A: 23,
 	B: "skidoo",
 	Sub: &Sub{
 		Sa: "Welcome",
 		SuperSub: SuperSub{
+			InlineStruct: InlineStruct{
+				Value: "InlineStructValue",
+			},
 			AJ: 5.2,
 			Map: map[string]string{
 				"A": "Testing",
@@ -80,7 +87,6 @@ var tt = MainStruct{
 		},
 	},
 }
-
 
 func TestIsEmpty(t *testing.T) {
 	data := []struct {
@@ -200,23 +206,76 @@ func TestPathOrSlice(t *testing.T) {
 }
 
 func TestPathOrStructSlice(t *testing.T) {
-	path := []string{"Sub", "SuperSub", "SliceSet"}
-	expected := tt.Sub.SuperSub.SliceSet
-	result := PathOr([]DataSet{}, path, &tt).([]DataSet)
-	if NotEquals(expected, result) {
-		t.Fatalf(fmt.Sprintf("Unexpected result pathOr expected (%T/%v) got (%T/%v) ", expected, expected, result, result))
+	data := []struct {
+		name           string
+		path           []string
+		data           interface{}
+		defaultVal     interface{}
+		expectedResult interface{}
+	}{
+		{
+			name:           "T1: Sub path with array",
+			data:           tt,
+			path:           []string{"Sub", "SuperSub", "SliceSet"},
+			defaultVal:     []DataSet{},
+			expectedResult: tt.Sub.SuperSub.SliceSet,
+		},
+		{
+			name:           "T2: array's element",
+			data:           tt,
+			path:           []string{"Sub", "SuperSub", "SliceSet", "1"},
+			defaultVal:     DataSet{},
+			expectedResult: tt.Sub.SuperSub.SliceSet[1],
+		},
+		{
+			name:           "T3: array's element path value",
+			data:           tt,
+			path:           []string{"Sub", "SuperSub", "SliceSet", "2", "Name"},
+			defaultVal:     "default",
+			expectedResult: tt.Sub.SuperSub.SliceSet[2].Name,
+		},
+		{
+			name:           "T4: array's index not avail",
+			data:           tt,
+			path:           []string{"Sub", "SuperSub", "SliceSet", "5"},
+			defaultVal:     DataSet{},
+			expectedResult: DataSet{},
+		},
+		{
+			name:           "T5: array's element path not avail",
+			data:           tt,
+			path:           []string{"Sub", "SuperSub", "SliceSet", "2", "FirstName"},
+			defaultVal:     "default",
+			expectedResult: "default",
+		},
+		{
+			name:           "T6: struct inline value",
+			data:           tt,
+			path:           []string{"Sub", "SuperSub", "Value"},
+			defaultVal:     "default",
+			expectedResult: "InlineStructValue",
+		},
+		{
+			name:           "T6: struct inline value",
+			data:           tt,
+			path:           []string{"Sub", "SuperSub", "Value"},
+			defaultVal:     "default",
+			expectedResult: "InlineStructValue",
+		},
+		{
+			name:           "T7: array's index not avail",
+			data:           tt,
+			path:           []string{"Sub", "SuperSub", "SliceSet", "5", "Name"},
+			defaultVal:     nil,
+			expectedResult: nil,
+		},
 	}
-	path1 := []string{"Sub", "SuperSub", "SliceSet", "1"}
-	expected1 := tt.Sub.SuperSub.SliceSet[1]
-	result1 := PathOr(DataSet{}, path1, &tt).(DataSet)
-	if NotEquals(expected1, result1) {
-		t.Fatalf(fmt.Sprintf("Unexpected result pathOr expected (%T/%v) got (%T/%v) ", expected1, expected1, result1, result1))
-	}
-	path2 := []string{"Sub", "SuperSub", "SliceSet", "2", "Name"}
-	expected2 := tt.Sub.SuperSub.SliceSet[2].Name
-	result2 := PathOr("default", path2, &tt).(string)
-	if NotEquals(expected2, result2) {
-		t.Fatalf(fmt.Sprintf("Unexpected result pathOr expected (%T/%v) got (%T/%v) ", expected2, expected2, result2, result2))
+	for _, d := range data {
+		fmt.Println("Test case:", d.name)
+		result := PathOr(d.defaultVal, d.path, d.data)
+		if NotEquals(d.expectedResult, result) {
+			t.Fatalf(fmt.Sprintf("Unexpected result [%s] pathOr expected (%T/%v) got (%T/%v) ", d.name, d.expectedResult, d.expectedResult, result, result))
+		}
 	}
 }
 
@@ -319,7 +378,6 @@ func TestPathOrWithEmpty(t *testing.T) {
 	fmt.Println("Expected:", expected, expected)
 	fmt.Println("Result:", result, result2)
 }
-
 
 func TestPropsSatisfies(t *testing.T) {
 	validator := func(d interface{}) bool {

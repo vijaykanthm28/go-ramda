@@ -103,23 +103,24 @@ func DeepFields(index int, path []string, iface interface{}, result interface{})
 		if err != nil {
 			return
 		}
-		if len(path) <= index+1 && sindex >= 0 {
-			if ifv.IsValid() {
+		if len(path) == index+1 && sindex >= 0 {
+			if ifv.IsValid() && result != nil && ifv.Len() > sindex {
+				val := reflect.ValueOf(result)
 				field = append(field, path[index])
-			}
-			setResult()
-			val := reflect.ValueOf(result)
-			if result != nil {
+				setResult()
 				val.Elem().Set(ifv.Index(sindex))
 			}
 			return
 		}
 
 		field = append(field, path[index])
-		subField := DeepFields(index+1, path, ifv.Index(sindex).Interface(), result)
-		if len(subField) > 0 {
-			field = append(field, subField...)
+		if ifv.Len() > sindex {
+			subField := DeepFields(index+1, path, ifv.Index(sindex).Interface(), result)
+			if len(subField) > 0 {
+				field = append(field, subField...)
+			}
 		}
+		return
 	case reflect.Ptr:
 		subField := DeepFields(index, path,
 			ifv.Elem().Interface(),
